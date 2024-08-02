@@ -1,37 +1,65 @@
 #include <iostream>
-#include <cstdlib>
 #include <ctime>
 #include <windows.h>
 using namespace std;
 
-#define MAXSIZE 5
+#define NUM_PARES 5 // Definido como o número de pares de cartas
 
 #define ERROPILHACHEIA -1
 #define ERROPILHAVAZIA -2
 
-#include "Pilha.h"
+typedef struct {
+    int topo;
+    int item[NUM_PARES * 2]; // Ajustado para caber todas as cartas
+} pilha;
 
-void embaralha(int *cartas, int n)
-{
-    srand(time(0));
-    for (int i = n - 1; i > 0; i--)
-    {
-        int j = rand() % (i + 1);
-        swap(cartas[i], cartas[j]);
+void ini_pi(pilha *p) {
+    p->topo = 0;
+}
+
+int vazia_pi(pilha *p) {
+    return (p->topo == 0);
+}
+
+int cheia_pi(pilha *p) {
+    return (p->topo == NUM_PARES * 2); // Ajustado para caber todas as cartas
+}
+
+void empilha(pilha *p, int x) {
+    if (!cheia_pi(p)) {
+        p->item[p->topo] = x;
+        p->topo++;
+    } else {
+        cout << "ERRO PILHA CHEIA" << endl;
     }
 }
 
-void mostrar_cartas(int *cartas, bool *descobertas, int n)
-{
+int desempilha(pilha *p) {
+    if (!vazia_pi(p)) {
+        p->topo--;
+        return p->item[p->topo];
+    } else {
+        cout << "ERRO PILHA VAZIA" << endl;
+        return ERROPILHAVAZIA;
+    }
+}
+
+void embaralha_e_empilha(pilha *p, int n) {
+    srand(time(0));
+    for (int i = n - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        swap(p->item[i], p->item[j]);
+    }
+}
+
+void mostrar_cartas(int *cartas, bool *descobertas, int n) {
     cout << "Posicoes: ";
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++) {
         cout << i << " ";
     }
     cout << endl;
     cout << "Cartas:   ";
-    for (int i = 0; i < n; i++)
-    {
+    for (int i = 0; i < n; i++) {
         if (descobertas[i])
             cout << cartas[i] << " ";
         else
@@ -40,23 +68,27 @@ void mostrar_cartas(int *cartas, bool *descobertas, int n)
     cout << endl;
 }
 
-bool jogo_memoria(int num_pares, int *pontos)
-{
+bool jogo_memoria(int num_pares, int *pontos) {
+    pilha p;
+    ini_pi(&p);
     int cartas[num_pares * 2];
     bool descobertas[num_pares * 2] = {false};
 
-    for (int i = 0; i < num_pares; i++)
-    {
-        cartas[2 * i] = i + 1;
-        cartas[2 * i + 1] = i + 1;
+    for (int i = 0; i < num_pares; i++) {
+        empilha(&p, i + 1);
+        empilha(&p, i + 1);
     }
-    embaralha(cartas, num_pares * 2);
+
+    embaralha_e_empilha(&p, num_pares * 2);
+
+    for (int i = 0; i < num_pares * 2; i++) {
+        cartas[i] = desempilha(&p);
+    }
 
     int jogador = 1;
     int tentativas = 0;
 
-    while (true)
-    {
+    while (true) {
         int pos1, pos2;
 
         cout << "Estado atual das cartas:" << endl;
@@ -67,8 +99,7 @@ bool jogo_memoria(int num_pares, int *pontos)
         cout << "Jogador " << jogador << ", escolha a segunda carta (0 a " << (num_pares * 2 - 1) << "): ";
         cin >> pos2;
 
-        if (pos1 == pos2 || pos1 < 0 || pos1 >= num_pares * 2 || pos2 < 0 || pos2 >= num_pares * 2 || descobertas[pos1] || descobertas[pos2])
-        {
+        if (pos1 == pos2 || pos1 < 0 || pos1 >= num_pares * 2 || pos2 < 0 || pos2 >= num_pares * 2 || descobertas[pos1] || descobertas[pos2]) {
             cout << "Posicoes invalidas ou ja descobertas. Tente novamente." << endl;
             continue;
         }
@@ -77,15 +108,12 @@ bool jogo_memoria(int num_pares, int *pontos)
 
         cout << "Voce revelou: " << cartas[pos1] << " e " << cartas[pos2] << endl;
 
-        if (cartas[pos1] == cartas[pos2])
-        {
+        if (cartas[pos1] == cartas[pos2]) {
             cout << "Par encontrado!" << endl;
             descobertas[pos1] = true;
             descobertas[pos2] = true;
             pontos[jogador - 1]++;
-        }
-        else
-        {
+        } else {
             cout << "Nao e um par. Tente novamente." << endl;
             descobertas[pos1] = true;
             descobertas[pos2] = true;
@@ -97,26 +125,20 @@ bool jogo_memoria(int num_pares, int *pontos)
         }
 
         bool terminou = true;
-        for (int i = 0; i < num_pares * 2; i++)
-        {
-            if (!descobertas[i])
-            {
+        for (int i = 0; i < num_pares * 2; i++) {
+            if (!descobertas[i]) {
                 terminou = false;
                 break;
             }
         }
 
-        if (terminou)
-        {
+        if (terminou) {
             cout << "Parabens! Todos os pares foram encontrados em " << tentativas << " tentativas." << endl;
             cout << "Pontos do Jogador 1: " << pontos[0] << endl;
             cout << "Pontos do Jogador 2: " << pontos[1] << endl;
-            if (pontos[0] > pontos[1])
-            {
+            if (pontos[0] > pontos[1]) {
                 cout << "Jogador 1 venceu!" << endl;
-            }
-            else if (pontos[1] > pontos[0])
-            {
+            } else if (pontos[1] > pontos[0]) {
                 cout << "Jogador 2 venceu!" << endl;
             }
             return true;
@@ -128,36 +150,31 @@ bool jogo_memoria(int num_pares, int *pontos)
     return false;
 }
 
-void menu()
-{
+void menu() {
     cout << "Menu:" << endl;
     cout << "1. Iniciar Jogo" << endl;
     cout << "2. Regras" << endl;
     cout << "3. Sair" << endl;
     cout << "Escolha uma opcao: ";
 }
-void regras()
-{
-    cout << "Jogo da memoria consiste em revelar duas cartas e verficar se elas sao iguals." << endl;
-    cout << "Se elas forem iguais, voce ganha um ponto e passa para o proximo jogador." << endl;
-    cout << "Caso Contrario, nao ganhara pontos e passa para o proximo jogador." << endl;
+
+void regras() {
+    cout << "Jogo da memoria consiste em revelar duas cartas e verficar se elas sao iguais." << endl;
+    cout << "Se elas forem iguais, voce ganha um ponto e continua jogando." << endl;
+    cout << "Caso contrario, nao ganhara pontos e passa para o proximo jogador." << endl;
 }
 
-int main()
-{
+int main() {
     int opcao;
     int pontos[2] = {0, 0};
 
-    while (true)
-    {
+    while (true) {
         menu();
         cin >> opcao;
 
-        switch (opcao)
-        {
+        switch (opcao) {
         case 1:
-            if (jogo_memoria(MAXSIZE, pontos))
-            {
+            if (jogo_memoria(NUM_PARES, pontos)) {
                 cout << "Jogo finalizado." << endl;
             }
             break;
