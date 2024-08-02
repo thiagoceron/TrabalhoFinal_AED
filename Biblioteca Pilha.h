@@ -1,14 +1,14 @@
 #include <iostream>
 using namespace std;
 
-#define MAXSIZE 5
+#define NUM_PARES 5
 
 #define ERROPILHACHEIA -1
 #define ERROPILHAVAZIA -2
 
 typedef struct{
 	int topo;
-	int item[MAXSIZE];
+	int item[NUM_PARES * 2];
 }pilha;
 
 
@@ -21,7 +21,7 @@ int vazia_pi(pilha *p) {
 }	
 
 int cheia_pi(pilha *p) {
-	return(p->topo == MAXSIZE);
+	return(p->topo == NUM_PARES * 2);
 }	
 
 void empilha(pilha *p, int x) {
@@ -48,7 +48,7 @@ void lista_pi(pilha *p) {
     if (vazia_pi(p)) {
         cout << "ERRO PILHA VAZIA" << endl;
     } else {
-        cout << "** PILHA **" << endl;
+        cout << "* PILHA *" << endl;
         for (i = (p->topo - 1); i >= 0; i--)
             cout << p->item[i] << endl;
     }
